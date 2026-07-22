@@ -88,8 +88,8 @@ export function assignRoles(playerCount: number): Role[] {
   // 특수 역할 (7명 이상부터)
   const sniperCount = playerCount >= 7 ? 1 : 0;
   const spyCount = playerCount >= 8 ? 1 : 0;
-  const mediumCount = playerCount >= 9 ? 1 : 0;
-  const terroristCount = playerCount >= 10 ? 1 : 0;
+  const mediumCount = playerCount >= 8 ? 1 : 0;
+  const terroristCount = playerCount >= 8 ? 1 : 0;
 
   const citizenCount = playerCount - mafiaCount - policeCount - doctorCount
     - sniperCount - spyCount - mediumCount - terroristCount;
