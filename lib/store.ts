@@ -61,7 +61,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       phase: "night",
       day: 1,
       winner: null,
-      nightResult: { killedId: null, protectedId: null, investigatedId: null, investigatedRole: null },
+      nightResult: { killedId: null, protectedId: null, investigatedId: null, investigatedRole: null, snipedId: null, mediumInvestigatedId: null, mediumInvestigatedRole: null },
       votes: {},
     });
     
@@ -175,7 +175,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       day: winner ? day : day + 1,
       winner,
       votes: {},
-      nightResult: winner ? null : { killedId: null, protectedId: null, investigatedId: null, investigatedRole: null },
+      nightResult: winner ? null : { killedId: null, protectedId: null, investigatedId: null, investigatedRole: null, snipedId: null, mediumInvestigatedId: null, mediumInvestigatedRole: null },
     });
   },
 

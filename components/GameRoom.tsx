@@ -15,7 +15,7 @@ export default function GameRoom({ game }: { game: Game }) {
   const myPlayer = state.players.find(p => p.id === playerId);
   const isHost = myPlayer?.isHost;
   const alivePlayers = state.players.filter(p => p.alive);
-  const myRoleInfo = myRole ? ROLE_INFO[myRole] : null;
+  const myRoleInfo = myRole ? ROLE_INFO[myRole as keyof typeof ROLE_INFO] : null;
 
   return (
     <div className="space-y-4">

@@ -7,7 +7,7 @@
     "dev:server": "tsx server/index.ts",
     "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_ENV=production node --import tsx server.ts",
     "lint": "next lint"
   },
   "dependencies": {

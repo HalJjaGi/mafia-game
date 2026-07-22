@@ -1,0 +1,13 @@
+__version__ = 1
+
+[phases.setup]
+nixPkgs = ["..."]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "NODE_ENV=production npx tsx server.ts"
