@@ -271,14 +271,21 @@ app.prepare().then(() => {
       room.state.day = 1;
       room.state.nightResult = createNightResult();
 
-      // 각자 역할 + 게임 내 역할 목록 전송
+      // 각자 역할 + 게임 내 역할 목록 + 마피아 팀 정보 전송
       const activeRoles = getActiveRoles(room.state);
+      const mafiaTeamIds = room.state.players
+        .filter(p => p.role && ROLE_INFO[p.role].team === "mafia")
+        .map(p => ({ id: p.id, name: p.name, role: p.role }));
+
       room.players.forEach((info, pid) => {
         const player = room.state.players.find(p => p.id === pid);
-        if (player) {
+        if (player?.role) {
+          const isMafiaTeam = ROLE_INFO[player.role].team === "mafia";
           io.to(info.socketId).emit("role:assigned", {
             role: player.role,
             activeRoles,
+            // 마피아 팀에게만 동료 정보 전송
+            mafiaAllies: isMafiaTeam ? mafiaTeamIds.filter(m => m.id !== pid) : undefined,
           });
         }
       });

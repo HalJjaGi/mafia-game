@@ -15,6 +15,7 @@ export function useOnlineGame() {
   const [sniperUsed, setSniperUsed] = useState(false);
   const [activeRoles, setActiveRoles] = useState<Role[]>([]);
   const [timeLeft, setTimeLeft] = useState<number>(0);
+  const [mafiaAllies, setMafiaAllies] = useState<{ id: string; name: string; role: string }[]>([]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -26,12 +27,18 @@ export function useOnlineGame() {
       setPlayerId(playerId);
     });
 
-    socket.on("role:assigned", ({ role, activeRoles: roles }: { role: string; activeRoles: Role[] }) => {
+    socket.on("role:assigned", ({ role, activeRoles: roles, mafiaAllies: allies }: {
+      role: string;
+      activeRoles: Role[];
+      mafiaAllies?: { id: string; name: string; role: string }[];
+    }) => {
       setMyRole(role);
       setInvestigationResult(null);
       setMediumResult(null);
       setSniperUsed(false);
       if (roles) setActiveRoles(roles);
+      if (allies) setMafiaAllies(allies);
+      else setMafiaAllies([]);
     });
 
     socket.on("police:result", ({ targetName, role }: { targetName: string; role: string }) => {
@@ -78,7 +85,7 @@ export function useOnlineGame() {
   return {
     state, roomCode, playerId, myRole, error,
     investigationResult, mediumResult, sniperUsed,
-    activeRoles, timeLeft,
+    activeRoles, timeLeft, mafiaAllies,
     createRoom, joinRoom, startGame, nightAction, endNight,
     vote, endVoting, toVote, resetGame,
   };
