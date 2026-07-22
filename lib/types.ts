@@ -85,12 +85,8 @@ export function assignRoles(playerCount: number): Role[] {
   const police = 1;
   const doctor = 1;
 
-  let spy = 0, medium = 0, sniper = 0, terrorist = 0;
-
-  // 특수 역할 풀에서 랜덤하게 배정
+  // 특수 역할 풀에서 배정
   const specialRoles: Role[] = ["sniper", "spy", "medium", "terrorist", "sniper", "spy", "medium"];
-  const specialCount = Math.min(playerCount - mafiaCount - police - doctor - 1, specialRoles.length);
-  // 최소 1명은 시민일 수도 있고 특수역할일 수도 있음
   const slotsForSpecial = Math.max(0, playerCount - mafiaCount - police - doctor);
 
   // 랜덤: 시민을 포함할지 말지 (50% 확률)

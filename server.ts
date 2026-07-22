@@ -342,10 +342,11 @@ app.prepare().then(() => {
       broadcastState(room.code, io);
     });
 
-    // 밤 수동 종료 (모든 행동 완료 시 방장이 가능)
+    // 밤 수동 종료 (방장만 가능, 타이머 만료 시 자동)
     socket.on("night:end", () => {
       const room = rooms.get(currentRoom || "");
       if (!room || room.state.phase !== "night") return;
+      if (currentPlayerId !== room.hostId) return;
       processNightEnd(room, io);
     });
 
