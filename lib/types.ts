@@ -73,35 +73,53 @@ export interface GameLog {
   timestamp: number;
 }
 
-// 역할 배정 (플레이어 수에 따라)
+// 역할 배정 — 일반 시민 없음, 전원 특수 역할
+// 4명: 마피아1 + 경찰 + 의사 + 저격수
+// 5명: + 스파이
+// 6명: + 영매
+// 7명: 마피아2 + 경찰 + 의사 + 저격수 + 스파이 + 영매
+// 8명: + 테러리스트
+// 9~12명: 마피아 추가 + 남은 자리에 역할 중복 배정
 export function assignRoles(playerCount: number): Role[] {
   const roles: Role[] = [];
 
-  // 마피아 수
   let mafiaCount = 1;
   if (playerCount >= 7) mafiaCount = 2;
   if (playerCount >= 11) mafiaCount = 3;
 
-  const policeCount = playerCount >= 5 ? 1 : 0;
-  const doctorCount = playerCount >= 6 ? 1 : 0;
+  // 특수 시민 역할 (항상 1개씩)
+  const police = 1;
+  const doctor = 1;
+  const sniper = 1;
 
-  // 특수 역할 (7명 이상부터)
-  const sniperCount = playerCount >= 7 ? 1 : 0;
-  const spyCount = playerCount >= 8 ? 1 : 0;
-  const mediumCount = playerCount >= 8 ? 1 : 0;
-  const terroristCount = playerCount >= 8 ? 1 : 0;
+  // 추가 특수 역할
+  let spy = 0, medium = 0, terrorist = 0;
 
-  const citizenCount = playerCount - mafiaCount - policeCount - doctorCount
-    - sniperCount - spyCount - mediumCount - terroristCount;
+  if (playerCount >= 5) spy = 1;
+  if (playerCount >= 6) medium = 1;
+  if (playerCount >= 8) terrorist = 1;
+
+  const assigned = mafiaCount + police + doctor + sniper + spy + medium + terrorist;
+  const extra = playerCount - assigned;
+
+  // 남은 자리: 특수 역할 중복 배정 (마피아 추가 없음)
+  const pool: Role[] = ["sniper", "medium", "spy", "terrorist", "police", "doctor"];
+  for (let i = 0; i < Math.max(0, extra); i++) {
+    roles.push(pool[i % pool.length]);
+  }
 
   for (let i = 0; i < mafiaCount; i++) roles.push("mafia");
-  if (policeCount) roles.push("police");
-  if (doctorCount) roles.push("doctor");
-  if (sniperCount) roles.push("sniper");
-  if (spyCount) roles.push("spy");
-  if (mediumCount) roles.push("medium");
-  if (terroristCount) roles.push("terrorist");
-  for (let i = 0; i < Math.max(0, citizenCount); i++) roles.push("citizen");
+  roles.push("police", "doctor", "sniper");
+  if (spy) roles.push("spy");
+  if (medium) roles.push("medium");
+  if (terrorist) roles.push("terrorist");
+
+  // 만약 roles 수가 playerCount보다 많으면 자르기 (안전장치)
+  // 만약 부족하면 풀에서 추가
+  while (roles.length < playerCount) {
+    roles.push(pool[roles.length % pool.length]);
+  }
+  roles.length = playerCount;
 
   // 셔플
   for (let i = roles.length - 1; i > 0; i--) {
