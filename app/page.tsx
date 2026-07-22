@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useOnlineGame } from "@/lib/use-online-game";
 import { ROLE_INFO, PHASE_INFO } from "@/lib/types";
-import GameLobby from "@/components/GameLobby";
 import GameRoom from "@/components/GameRoom";
-import ChatPanel from "@/components/ChatPanel";
+import Tutorial from "@/components/Tutorial";
 
 export default function Home() {
   const game = useOnlineGame();
   const [screen, setScreen] = useState<"menu" | "lobby">("menu");
   const [playerName, setPlayerName] = useState("");
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const handleCreate = () => {
     if (!playerName.trim()) return;
@@ -24,11 +24,25 @@ export default function Home() {
     setScreen("lobby");
   };
 
+  // 게임 시작 시 튜토리얼 표시
+  useEffect(() => {
+    if (game.myRole && game.activeRoles.length > 0) {
+      setShowTutorial(true);
+    }
+  }, [game.myRole, game.activeRoles]);
+
   // 게임 참가 후
   if (screen === "lobby" && game.state) {
     return (
-      <div className="min-h-screen p-4 md:p-8 max-w-5xl mx-auto">
-        <header className="text-center mb-6">
+      <div className="min-h-screen p-4 md:p-8 max-w-3xl mx-auto">
+        {showTutorial && (
+          <Tutorial
+            activeRoles={game.activeRoles}
+            onClose={() => setShowTutorial(false)}
+          />
+        )}
+
+        <header className="text-center mb-4">
           <h1 className="text-3xl md:text-4xl font-bold">🎭 마피아 게임</h1>
           {game.roomCode && (
             <p className="text-[var(--muted)] mt-1">
@@ -43,14 +57,7 @@ export default function Home() {
           </div>
         )}
 
-        <div className="grid md:grid-cols-3 gap-4">
-          <div className="md:col-span-2">
-            <GameRoom game={game} />
-          </div>
-          <div>
-            <ChatPanel game={game} />
-          </div>
-        </div>
+        <GameRoom game={game} />
 
         <button
           onClick={() => {
@@ -70,7 +77,7 @@ export default function Home() {
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-[var(--surface)] rounded-2xl p-8 max-w-md w-full">
         <h1 className="text-4xl font-bold text-center mb-2">🎭 마피아 게임</h1>
-        <p className="text-center text-[var(--muted)] mb-8">온라인 멀티플레이어</p>
+        <p className="text-center text-[var(--muted)] mb-8">실시간 온라인 멀티플레이어</p>
 
         <input
           type="text"

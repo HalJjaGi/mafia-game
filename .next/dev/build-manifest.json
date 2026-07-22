@@ -3,24 +3,11 @@
     "/_app": []
   },
   "devFiles": [],
-  "polyfillFiles": [
-    "static/chunks/0e50_next_dist_build_polyfills_polyfill-nomodule.js"
-  ],
+  "polyfillFiles": [],
   "lowPriorityFiles": [
     "static/development/_buildManifest.js",
     "static/development/_ssgManifest.js",
     "static/development/_clientMiddlewareManifest.js"
   ],
-  "rootMainFiles": [
-    "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_09wwc2h._.js",
-    "static/chunks/0e50_next_dist_compiled_next-devtools_index_0711xo7.js",
-    "static/chunks/0e50_next_dist_compiled_react-dom_0jcc86r._.js",
-    "static/chunks/0e50_next_dist_compiled_react-server-dom-turbopack_15mexvv._.js",
-    "static/chunks/0e50_next_dist_compiled_0qc3dqv._.js",
-    "static/chunks/0e50_next_dist_client_1_-03dl._.js",
-    "static/chunks/0e50_next_dist_1hc1_ra._.js",
-    "static/chunks/0e50_@swc_helpers_cjs_0qjco86._.js",
-    "static/chunks/mafia-game_1anvha4._.js",
-    "static/chunks/turbopack-mafia-game_02m10h4._.js"
-  ]
+  "rootMainFiles": []
 }
