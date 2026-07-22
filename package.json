@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:server": "tsx server/index.ts",
+    "dev:all": "concurrently \"npm run dev\" \"npm run dev:server\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -23,6 +25,8 @@
     "@types/react-dom": "^19.0.0",
     "tailwindcss": "^4.0.0",
     "@tailwindcss/postcss": "^4.0.0",
-    "postcss": "^8.4.0"
+    "postcss": "^8.4.0",
+    "tsx": "^4.0.0",
+    "concurrently": "^9.0.0"
   }
 }
