@@ -74,41 +74,59 @@ export interface GameLog {
 }
 
 // 역할 배정 — 랜덤 모드 (시민이 있을 수도 없을 수도 있음)
+// 마피아 팀: mafia, spy, terrorist
+// 시민 팀: citizen, police, doctor, sniper, medium
 export function assignRoles(playerCount: number): Role[] {
   const roles: Role[] = [];
 
+  // === 마피아 팀 ===
   let mafiaCount = 1;
   if (playerCount >= 7) mafiaCount = 2;
   if (playerCount >= 11) mafiaCount = 3;
 
-  // 기본 특수 역할 (항상 배정)
-  const police = 1;
-  const doctor = 1;
+  // 마피아 팀 특수 역할 (최대 마피아 수 - 1개까지)
+  const mafiaSpecialPool: Role[] = ["spy", "terrorist"];
+  const mafiaSpecialCount = Math.min(mafiaSpecialPool.length, Math.max(0, mafiaCount - 1));
+  // 마피아 팀 구성: mafiaCount 중 1명은 순수 마피아, 나머지는 특수 마피아
 
-  // 특수 역할 풀에서 배정
-  const specialRoles: Role[] = ["sniper", "spy", "medium", "terrorist", "sniper", "spy", "medium"];
-  const slotsForSpecial = Math.max(0, playerCount - mafiaCount - police - doctor);
+  // === 시민 팀 ===
+  // 항상 배정
+  roles.push("police", "doctor");
+
+  // 시민 팀 특수 역할 풀 (spy, terrorist 제외!)
+  const citizenSpecialPool: Role[] = ["sniper", "medium", "sniper", "medium"];
+
+  const baseAssigned = mafiaCount + 2; // 마피아 + 경찰 + 의사
+  const remainingSlots = playerCount - baseAssigned;
 
   // 랜덤: 시민을 포함할지 말지 (50% 확률)
   const allowCitizens = Math.random() < 0.5;
 
-  if (allowCitizens) {
-    // 시민 포함 모드: 특수 역할 일부만 배정 + 나머지는 시민
-    const specialAssign = Math.floor(slotsForSpecial * 0.6); // 60%만 특수 역할
+  // 마피아 특수 역할 배정 (남은 자리에서 차감)
+  let slotsForCitizenSpecial = remainingSlots;
+  for (let i = 0; i < mafiaSpecialCount; i++) {
+    roles.push(mafiaSpecialPool[i]);
+    slotsForCitizenSpecial--;
+  }
+
+  if (allowCitizens && slotsForCitizenSpecial > 0) {
+    // 시민 포함 모드: 시민 특수 역할 60% + 일반 시민 40%
+    const specialAssign = Math.floor(slotsForCitizenSpecial * 0.6);
     for (let i = 0; i < specialAssign; i++) {
-      roles.push(specialRoles[i % specialRoles.length]);
+      roles.push(citizenSpecialPool[i % citizenSpecialPool.length]);
     }
-    const citizenCount = playerCount - mafiaCount - police - doctor - specialAssign;
-    for (let i = 0; i < Math.max(0, citizenCount); i++) roles.push("citizen");
+    const citizenCount = slotsForCitizenSpecial - specialAssign;
+    for (let i = 0; i < citizenCount; i++) roles.push("citizen");
   } else {
-    // 시민 없음 모드: 전부 특수 역할
-    for (let i = 0; i < slotsForSpecial; i++) {
-      roles.push(specialRoles[i % specialRoles.length]);
+    // 시민 없음 모드: 전부 시민 특수 역할
+    for (let i = 0; i < slotsForCitizenSpecial; i++) {
+      roles.push(citizenSpecialPool[i % citizenSpecialPool.length]);
     }
   }
 
-  for (let i = 0; i < mafiaCount; i++) roles.push("mafia");
-  roles.push("police", "doctor");
+  // 순수 마피아 배정
+  const actualMafia = mafiaCount - mafiaSpecialCount;
+  for (let i = 0; i < actualMafia; i++) roles.push("mafia");
 
   // 수 맞추기 (안전장치)
   while (roles.length < playerCount) roles.push("citizen");
