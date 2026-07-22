@@ -12,6 +12,8 @@ export function useOnlineGame() {
   const [error, setError] = useState<string>("");
   const [chatMessages, setChatMessages] = useState<{ playerId: string; name: string; message: string; timestamp: number }[]>([]);
   const [investigationResult, setInvestigationResult] = useState<{ targetName: string; role: string } | null>(null);
+  const [mediumResult, setMediumResult] = useState<{ targetName: string; role: string } | null>(null);
+  const [sniperUsed, setSniperUsed] = useState(false);
 
   useEffect(() => {
     const socket = getSocket();
@@ -27,10 +29,21 @@ export function useOnlineGame() {
 
     socket.on("role:assigned", ({ role }: { role: string }) => {
       setMyRole(role);
+      setInvestigationResult(null);
+      setMediumResult(null);
+      setSniperUsed(false);
     });
 
     socket.on("police:result", ({ targetName, role }: { targetName: string; role: string }) => {
       setInvestigationResult({ targetName, role });
+    });
+
+    socket.on("medium:result", ({ targetName, role }: { targetName: string; role: string }) => {
+      setMediumResult({ targetName, role });
+    });
+
+    socket.on("sniper:used", () => {
+      setSniperUsed(true);
     });
 
     socket.on("chat:message", (msg: { playerId: string; name: string; message: string; timestamp: number }) => {
@@ -47,6 +60,8 @@ export function useOnlineGame() {
       socket.off("room:joined");
       socket.off("role:assigned");
       socket.off("police:result");
+      socket.off("medium:result");
+      socket.off("sniper:used");
       socket.off("chat:message");
       socket.off("error");
     };
@@ -100,6 +115,8 @@ export function useOnlineGame() {
     error,
     chatMessages,
     investigationResult,
+    mediumResult,
+    sniperUsed,
     createRoom,
     joinRoom,
     startGame,

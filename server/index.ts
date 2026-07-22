@@ -1,7 +1,7 @@
 import { createServer } from "http";
 import { Server } from "socket.io";
 import type { GameState, Player, Role } from "../lib/types";
-import { assignRoles, checkWinner } from "../lib/types";
+import { assignRoles, checkWinner, getInvestigatedRole, ROLE_INFO } from "../lib/types";
 
 interface Room {
   code: string;
@@ -25,6 +25,18 @@ function createInitialState(): GameState {
     log: [],
     nightResult: null,
     votes: {},
+  };
+}
+
+function createNightResult(): NonNullable<GameState["nightResult"]> {
+  return {
+    killedId: null,
+    protectedId: null,
+    investigatedId: null,
+    investigatedRole: null,
+    snipedId: null,
+    mediumInvestigatedId: null,
+    mediumInvestigatedRole: null,
   };
 }
 
@@ -120,16 +132,12 @@ io.on("connection", (socket) => {
       ...p,
       role: roles[i],
       alive: true,
+      abilities: {},
     }));
     room.state.phase = "night";
     room.state.day = 1;
     room.state.winner = null;
-    room.state.nightResult = {
-      killedId: null,
-      protectedId: null,
-      investigatedId: null,
-      investigatedRole: null,
-    };
+    room.state.nightResult = createNightResult();
 
     // 각자 자기 역할만 전송
     room.players.forEach((playerInfo, pid) => {
@@ -170,13 +178,38 @@ io.on("connection", (socket) => {
         if (player.role === "police") {
           room.state.nightResult.investigatedId = targetId;
           const target = room.state.players.find(p => p.id === targetId);
-          room.state.nightResult.investigatedRole = target?.role || null;
-          // 경찰에게만 결과 전송
-          socket.emit("police:result", {
-            targetId,
-            targetName: target?.name,
-            role: target?.role,
-          });
+          if (target) {
+            // 스파이는 위장 (getInvestigatedRole 사용)
+            const fakeRole = getInvestigatedRole(target);
+            room.state.nightResult.investigatedRole = fakeRole;
+            socket.emit("police:result", {
+              targetId,
+              targetName: target.name,
+              role: fakeRole,
+            });
+          }
+        }
+        break;
+      case "sniper-shoot":
+        if (player.role === "sniper" && !player.abilities?.sniperUsed) {
+          room.state.nightResult.snipedId = targetId;
+          player.abilities = { ...player.abilities, sniperUsed: true };
+          socket.emit("sniper:used", { targetId });
+        }
+        break;
+      case "medium-investigate":
+        if (player.role === "medium") {
+          // 영매는 죽은 사람만 조사 가능
+          const target = room.state.players.find(p => p.id === targetId);
+          if (target && !target.alive) {
+            room.state.nightResult.mediumInvestigatedId = targetId;
+            room.state.nightResult.mediumInvestigatedRole = target.role;
+            socket.emit("medium:result", {
+              targetId,
+              targetName: target.name,
+              role: target.role,
+            });
+          }
         }
         break;
     }
@@ -193,24 +226,53 @@ io.on("connection", (socket) => {
     const { nightResult } = room.state;
     if (!nightResult) return;
 
-    let killedName: string | null = null;
+    const killedIds: string[] = [];
 
+    // 마피아 처형 (의사 보호 확인)
     if (nightResult.killedId && nightResult.killedId !== nightResult.protectedId) {
-      const killed = room.state.players.find(p => p.id === nightResult.killedId);
-      if (killed) {
-        killed.alive = false;
-        killedName = killed.name;
+      killedIds.push(nightResult.killedId);
+    }
+
+    // 저격수 저격 (보호 대상과 무관)
+    if (nightResult.snipedId && !killedIds.includes(nightResult.snipedId)) {
+      killedIds.push(nightResult.snipedId);
+    }
+
+    // 사망 처리 + 테러리스트 반격
+    const newlyDead: Player[] = [];
+    for (const id of killedIds) {
+      const victim = room.state.players.find(p => p.id === id);
+      if (victim && victim.alive) {
+        victim.alive = false;
+        newlyDead.push(victim);
+      }
+    }
+
+    // 테러리스트가 죽었으면 랜덤 타겋과 함께 죽임
+    for (const dead of newlyDead) {
+      if (dead.role === "terrorist") {
+        // 테러리스트가 마피아 처형/저격으로 죽은 경우 → 공격자와 같이 죽임
+        // 단순화: 살아있는 시민 중 랜덤 1명 (또는 가장 많이 투표받은 사람)
+        const aliveCitizens = room.state.players.filter(p => p.alive && ROLE_INFO[p.role!].team === "citizen");
+        if (aliveCitizens.length > 0) {
+          const victim = aliveCitizens[Math.floor(Math.random() * aliveCitizens.length)];
+          victim.alive = false;
+          addLog(room, `💣 테러리스트 ${dead.name}의 자폭! ${victim.name}님이 함께 사망했습니다.`);
+        }
+      }
+    }
+
+    // 로그
+    const killedNames = newlyDead.filter(d => d.role !== "terrorist").map(d => d.name);
+    if (newlyDead.length === 0) {
+      addLog(room, `🌙 ${room.state.day}일차 밤: 아무도 죽지 않았습니다.`);
+    } else {
+      for (const name of killedNames) {
+        addLog(room, `🌙 ${room.state.day}일차 밤: ${name}님이 사망했습니다.`);
       }
     }
 
     const winner = checkWinner(room.state.players);
-
-    if (killedName) {
-      addLog(room, `🌙 ${room.state.day}일차 밤: ${killedName}님이 사망했습니다.`);
-    } else {
-      addLog(room, `🌙 ${room.state.day}일차 밤: 아무도 죽지 않았습니다.`);
-    }
-
     room.state.phase = winner ? "result" : "day-discussion";
     room.state.winner = winner;
     room.state.nightResult = null;
@@ -262,6 +324,17 @@ io.on("connection", (socket) => {
       if (eliminated) {
         eliminated.alive = false;
         addLog(room, `🗳️ ${room.state.day}일차 투표: ${eliminated.name}님이 추방되었습니다.`);
+
+        // 테러리스트 투표 추방 시 자폭
+        if (eliminated.role === "terrorist") {
+          // 테러리스트를 가장 많이 투표한 사람... 은 알기 어려우니 랜덤 시민
+          const aliveCitizens = players.filter(p => p.alive && ROLE_INFO[p.role!].team === "citizen");
+          if (aliveCitizens.length > 0) {
+            const victim = aliveCitizens[Math.floor(Math.random() * aliveCitizens.length)];
+            victim.alive = false;
+            addLog(room, `💣 테러리스트 ${eliminated.name}의 자폭! ${victim.name}님이 함께 사망했습니다.`);
+          }
+        }
       }
     } else {
       addLog(room, `🗳️ ${room.state.day}일차 투표: 동표로 아무도 추방되지 않았습니다.`);
@@ -274,12 +347,7 @@ io.on("connection", (socket) => {
 
     if (!winner) {
       room.state.day += 1;
-      room.state.nightResult = {
-        killedId: null,
-        protectedId: null,
-        investigatedId: null,
-        investigatedRole: null,
-      };
+      room.state.nightResult = createNightResult();
     }
 
     broadcastState(room.code);
@@ -316,7 +384,7 @@ io.on("connection", (socket) => {
     if (currentPlayerId !== room.hostId) return;
 
     room.state = createInitialState();
-    room.state.players = Array.from(room.players.entries()).map(([id, info], i) => ({
+    room.state.players = Array.from(room.players.entries()).map(([id, info]) => ({
       id,
       name: info.name,
       role: null,
@@ -336,26 +404,22 @@ io.on("connection", (socket) => {
     const player = room.state.players.find(p => p.id === currentPlayerId);
     if (!player) return;
 
-    // 대기실에서만 즉시 제거, 게임 중이면 사망 처리
     if (room.state.phase === "waiting") {
       room.players.delete(currentPlayerId);
       room.state.players = room.state.players.filter(p => p.id !== currentPlayerId);
       
-      // 방장이 나가면 다음 사람이 방장
       if (room.hostId === currentPlayerId && room.players.size > 0) {
         room.hostId = Array.from(room.players.keys())[0];
         const newHost = room.state.players.find(p => p.id === room.hostId);
         if (newHost) newHost.isHost = true;
       }
       
-      // 빈 방이면 삭제
       if (room.players.size === 0) {
         rooms.delete(room.code);
       } else {
         broadcastState(room.code);
       }
     } else {
-      // 게임 중엔 사망 처리
       player.alive = false;
       addLog(room, `${player.name}님이 연결을 잃었습니다.`);
       broadcastState(room.code);

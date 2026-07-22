@@ -52,6 +52,11 @@ export default function GameRoom({ game }: { game: Game }) {
               🔍 {game.investigationResult.targetName}: {ROLE_INFO[game.investigationResult.role as keyof typeof ROLE_INFO]?.name}
             </div>
           )}
+          {game.mediumResult && (
+            <div className="ml-auto text-sm bg-purple-900/40 px-3 py-1 rounded-lg">
+              🔮 {game.mediumResult.targetName}: {ROLE_INFO[game.mediumResult.role as keyof typeof ROLE_INFO]?.name}
+            </div>
+          )}
         </div>
       )}
 
