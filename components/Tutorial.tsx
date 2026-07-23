@@ -45,17 +45,20 @@ export default function Tutorial({ activeRoles, onClose }: { activeRoles: Role[]
             {activeRoles.map(role => {
               const info = ROLE_INFO[role];
               return (
-                <div key={role} className="flex items-start gap-3 bg-[var(--bg)] rounded-lg p-3">
-                  <span className="text-2xl">{info.emoji}</span>
-                  <div>
-                    <p className="font-bold text-sm">
-                      {info.name}
-                      <span className={`ml-2 text-xs ${info.team === "mafia" ? "text-red-400" : "text-blue-400"}`}>
-                        ({info.team === "mafia" ? "마피아 팀" : "시민 팀"})
-                      </span>
-                    </p>
-                    <p className="text-xs text-[var(--muted)]">{info.desc}</p>
+                <div key={role} className="bg-[var(--bg)] rounded-lg p-3">
+                  <div className="flex items-start gap-3 mb-1">
+                    <span className="text-2xl">{info.emoji}</span>
+                    <div className="flex-1">
+                      <p className="font-bold text-sm">
+                        {info.name}
+                        <span className={`ml-2 text-xs ${info.team === "mafia" ? "text-red-400" : "text-blue-400"}`}>
+                          ({info.team === "mafia" ? "마피아 팀" : "시민 팀"})
+                        </span>
+                      </p>
+                      <p className="text-xs text-[var(--muted)] mt-0.5">{info.desc}</p>
+                    </div>
                   </div>
+                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">{info.detail}</p>
                 </div>
               );
             })}

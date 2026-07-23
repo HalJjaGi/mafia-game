@@ -89,25 +89,32 @@ export default function GameRoom({ game }: { game: Game }) {
 
       {/* 내 역할 + 능력 결과 */}
       {state.phase !== "waiting" && state.phase !== "result" && myRoleInfo && (
-        <div className="bg-[var(--surface)] rounded-xl p-3 flex items-center gap-3">
-          <span className="text-2xl">{myRoleInfo.emoji}</span>
-          <div className="flex-1">
-            <p className="font-bold text-sm">
-              {myRoleInfo.name}
-              <span className={`ml-2 text-xs ${myRoleInfo.team === "mafia" ? "text-red-400" : "text-blue-400"}`}>
-                {myRoleInfo.team === "mafia" ? "마피아 팀" : "시민 팀"}
-              </span>
-            </p>
-            <p className="text-xs text-[var(--muted)]">{myRoleInfo.desc}</p>
-          </div>
-          {game.investigationResult && (
-            <div className="text-xs bg-[var(--accent)] px-2 py-1 rounded">
-              🔍 {game.investigationResult.targetName}: {ROLE_INFO[game.investigationResult.role as keyof typeof ROLE_INFO]?.name}
+        <div className="bg-[var(--surface)] rounded-xl p-3">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl">{myRoleInfo.emoji}</span>
+            <div className="flex-1">
+              <p className="font-bold text-sm">
+                {myRoleInfo.name}
+                <span className={`ml-2 text-xs ${myRoleInfo.team === "mafia" ? "text-red-400" : "text-blue-400"}`}>
+                  {myRoleInfo.team === "mafia" ? "마피아 팀" : "시민 팀"}
+                </span>
+              </p>
+              <p className="text-xs text-[var(--muted)]">{myRoleInfo.desc}</p>
             </div>
-          )}
-          {game.mediumResult && (
-            <div className="text-xs bg-purple-900/40 px-2 py-1 rounded">
-              🔮 {game.mediumResult.targetName}: {ROLE_INFO[game.mediumResult.role as keyof typeof ROLE_INFO]?.name}
+          </div>
+          <p className="text-xs text-gray-500 mt-2 leading-relaxed">{myRoleInfo.detail}</p>
+          {(game.investigationResult || game.mediumResult) && (
+            <div className="mt-2 flex gap-2 flex-wrap">
+              {game.investigationResult && (
+                <div className="text-xs bg-[var(--accent)] px-2 py-1 rounded">
+                  🔍 {game.investigationResult.targetName}: {ROLE_INFO[game.investigationResult.role as keyof typeof ROLE_INFO]?.name}
+                </div>
+              )}
+              {game.mediumResult && (
+                <div className="text-xs bg-purple-900/40 px-2 py-1 rounded">
+                  🔮 {game.mediumResult.targetName}: {ROLE_INFO[game.mediumResult.role as keyof typeof ROLE_INFO]?.name}
+                </div>
+              )}
             </div>
           )}
         </div>

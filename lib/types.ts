@@ -9,15 +9,47 @@ export type Role =
   | "medium"    // 영매 (시민 팀, 죽은 사람의 역할 확인)
   | "terrorist"; // 테러리스트 (마피아 팀, 죽을 때 같이 죽임)
 
-export const ROLE_INFO: Record<Role, { name: string; emoji: string; team: "mafia" | "citizen"; desc: string }> = {
-  mafia:      { name: "마피아",     emoji: "🔪", team: "mafia",   desc: "밤에 시민을 하나씩 제거합니다" },
-  citizen:    { name: "시민",       emoji: "👤", team: "citizen", desc: "낮에 토론과 투표로 마피아를 찾아냅니다" },
-  police:     { name: "경찰",       emoji: "🔍", team: "citizen", desc: "밤에 한 명을 조사해 직업을 알 수 있습니다" },
-  doctor:     { name: "의사",       emoji: "💉", team: "citizen", desc: "밤에 한 명을 보호할 수 있습니다" },
-  spy:        { name: "스파이",     emoji: "🕵️", team: "mafia",   desc: "마피아 팀이지만 경찰 조사에 시민으로 나옵니다" },
-  sniper:     { name: "저격수",     emoji: "🎯", team: "citizen", desc: "게임 중 1회, 밤에 누구든 저격할 수 있습니다" },
-  medium:     { name: "영매",       emoji: "🔮", team: "citizen", desc: "밤에 죽은 사람의 역할을 알아낼 수 있습니다" },
-  terrorist:  { name: "테러리스트", emoji: "💣", team: "mafia",   desc: "처형/투표로 죽을 때 자신을 처형한 사람을 같이 죽입니다" },
+export const ROLE_INFO: Record<Role, { name: string; emoji: string; team: "mafia" | "citizen"; desc: string; detail: string }> = {
+  mafia: {
+    name: "마피아", emoji: "🔪", team: "mafia",
+    desc: "밤에 시민을 처형합니다",
+    detail: "매일 밤 마피아끼리 합의하여 1명의 시민을 처형합니다. 낮에는 시민으로 위장해 토론과 투표에 참여하세요. 마피아 동료를 확인할 수 있습니다.",
+  },
+  citizen: {
+    name: "시민", emoji: "👤", team: "citizen",
+    desc: "토론과 투표로 마피아를 찾아냅니다",
+    detail: "특수 능력이 없지만, 낮의 토론과 투표에서 예리한 판단으로 마피아를 색출하는 핵심 역할입니다. 경찰과 의사의 발언을 잘 파악하세요.",
+  },
+  police: {
+    name: "경찰", emoji: "🔍", team: "citizen",
+    desc: "밤에 1명을 조사해 직업을 확인합니다",
+    detail: "매일 밤 살아있는 1명을 선택해 그 사람의 직업을 알아냅니다. 단, 스파이는 시민으로 위장하므로 정확하지 않을 수 있습니다. 낮에 결과를 바탕으로 시민들을 이끌어 마피아를 찾아내세요.",
+  },
+  doctor: {
+    name: "의사", emoji: "💉", team: "citizen",
+    desc: "밤에 1명을 마피아의 공격으로부터 보호합니다",
+    detail: "매일 밤 1명을 선택해 보호합니다. 마피아가 그 사람을 공격해도 살아남습니다. 자기 자신도 보호할 수 있습니다. 누구를 보호할지 신중하게 결정하세요.",
+  },
+  spy: {
+    name: "스파이", emoji: "🕵️", team: "mafia",
+    desc: "경찰 조사에 시민으로 위장하는 마피아",
+    detail: "마피아 팀이지만 경찰이 조사하면 '시민'으로 나타납니다. 마피아 동료를 확인할 수 있으며, 낮에는 시민처럼 행동해 의심을 받지 않는 것이 중요합니다. 밤에는 별도 능력이 없습니다.",
+  },
+  sniper: {
+    name: "저격수", emoji: "🎯", team: "citizen",
+    desc: "게임 중 1회, 의사 보호을 무시하고 저격",
+    detail: "게임 전체에서 단 1번, 밤에 누구든 저격할 수 있습니다. 의사의 보호를 무시하고 대상을 사망시킵니다. 가장 의심되는 사람이나 확정적인 마피아에게 신중하게 사용하세요.",
+  },
+  medium: {
+    name: "영매", emoji: "🔮", team: "citizen",
+    desc: "죽은 사람의 직업을 확인합니다",
+    detail: "매일 밤 이미 죽은 사람 1명을 선택해 그 사람의 직업을 알아냅니다. 어제 밤에 죽은 사람이 마피아였는지 시민이었는지 확인하여, 남은 생존자들의 정체를 추론하는 데 활용하세요.",
+  },
+  terrorist: {
+    name: "테러리스트", emoji: "💣", team: "mafia",
+    desc: "사망 시 시민 1명을 동반 사망시킵니다",
+    detail: "마피아 팀입니다. 마피아에게 처형당하거나, 투표로 추방당하거나, 저격당할 때 자폭이 발동되어 살아있는 시민 1명을 무작위로 함께 사망시킵니다. 마피아 동료를 확인할 수 있습니다. 밤에는 별도 능력이 없습니다.",
+  },
 };
 
 // 게임 단계
